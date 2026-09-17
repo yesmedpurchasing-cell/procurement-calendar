@@ -622,7 +622,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -911,6 +911,9 @@ const db = getFirestore(firebaseApp);
           <label>Password</label>
           <input type="password" id="login-password" placeholder="Password">
         </div>
+        <div style="text-align:right;margin:-8px 0 12px 0;">
+          <button id="forgot-link" style="background:none;border:none;padding:0;font-size:11.5px;color:var(--light-blue);cursor:pointer;font-family:'Satoshi',sans-serif;text-decoration:underline;">Forgot password?</button>
+        </div>
         <div id="login-error" style="min-height:18px;">${errorMsg ? '<div class="save-error">'+escapeHtml(errorMsg)+'</div>' : ''}</div>
         <button class="btn primary" id="login-btn" style="width:100%;">Sign in</button>
       </div>
@@ -929,6 +932,20 @@ const db = getFirestore(firebaseApp);
       }
     };
     document.getElementById('login-btn').onclick = doLogin;
+    document.getElementById('forgot-link').onclick = async ()=>{
+      const email = document.getElementById('login-email').value.trim();
+      const errorEl = document.getElementById('login-error');
+      if(!email){
+        errorEl.innerHTML = '<div class="save-error">Enter your email above first, then click "Forgot password?" again.</div>';
+        return;
+      }
+      try{
+        await sendPasswordResetEmail(auth, email);
+        errorEl.innerHTML = '<div style="font-size:11.5px;color:var(--green);">Password reset email sent to '+escapeHtml(email)+' — check your inbox.</div>';
+      } catch(e){
+        errorEl.innerHTML = '<div class="save-error">'+escapeHtml(loginErrorMessage(e))+'</div>';
+      }
+    };
     ['login-email','login-password'].forEach(id=>{
       document.getElementById(id).addEventListener('keydown', (e)=>{ if(e.key === 'Enter') doLogin(); });
     });
